@@ -32,7 +32,7 @@ export default function MainPage() {
   return (
     <div className="w-full">
       {/* Hero */}
-      <section className="w-full bg-gray-200">
+      <section className="w-full ">
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="flex flex-col items-center justify-center text-center">
             <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">
