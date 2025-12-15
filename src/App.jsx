@@ -1,11 +1,14 @@
-import { useState } from 'react'
-import './App.css'
+import React from 'react'
+import { Outlet } from 'react-router-dom'
+import Navbar from './components/NavBar.jsx'
 
 function App() {
-    <Routers>
-        <Router>
-        </Router>
-    </Routers>
+    return (
+        <div>
+            <Navbar />
+            <Outlet />
+        </div>
+    )
 }
 
 export default App
