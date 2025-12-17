@@ -72,8 +72,7 @@ export default function MainPage() {
           <div className="md:col-span-2">
             <p className="mt-3 text-sm leading-6 text-gray-600">
               Days에서 오늘 할 일을 정리하고, Timer로 공부 시간을 기록하고,
-              Challenges에서 달성률을 확인합니다. 최소 기능(MVP)부터 빠르게
-              완성한 뒤, 캘린더/스트릭/통계 고도화로 확장합니다.
+              Challenges에서 달성률을 확인합니다.
             </p>
 
             {/* Quick links */}
