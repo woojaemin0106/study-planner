@@ -18,18 +18,16 @@ export default function App() {
   return (
     <>
       <NavBar />
-      <div className="pt-16 min-h screen bg-gray-50">
+      <div className="pt-16 min-h-screen bg-gray-50">
         <Routes>
           {/* Home */}
           <Route path="/" element={<MainPage />} />
 
           {/* Tabs */}
-          <Route path="/Days" element={<DaysLayout />}>
-            <Route index element={<Navigate to="daily" replace />} />
-            <Route path="daily" element={<DaysDailyPage />} />
-            <Route path="weekly" element={<DaysWeeklyPage />} />
-            <Route path="monthly" element={<DaysMonthlyPage />} />
-          </Route>
+          <Route path="/Days" element={<DaysLayout />} />
+          <Route path="/Days/daily" element={<DaysDailyPage />} />
+          <Route path="/Days/weekly" element={<DaysWeeklyPage />} />
+          <Route path="/Days/monthly" element={<DaysMonthlyPage />} />
 
           <Route path="/Timer" element={<TimerPage />} />
           <Route path="/Challenges" element={<ChallengesPage />} />

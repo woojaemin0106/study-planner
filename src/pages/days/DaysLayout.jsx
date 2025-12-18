@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const cards = [
   {
@@ -23,14 +23,33 @@ const cards = [
 ];
 
 export default function DaysLayout() {
+  const navigate = useNavigate();
   const location = useLocation();
+
+  const templates = [
+    {
+      id: "morning",
+      title: "아침 루틴",
+      items: ["영단어 30개", "복습 20분", "문제 1세트"],
+    },
+    {
+      id: "exam",
+      title: "시험 대비",
+      items: ["기출 2회", "오답 정리", "요약 노트"],
+    },
+    {
+      id: "coding",
+      title: "코테 루틴",
+      items: ["알고리즘 2문제", "풀이 정리", "복습 체크"],
+    },
+  ];
 
   const activeKey = useMemo(() => {
     const seg = location.pathname.split("/").filter(Boolean);
     const key = seg[1] || "daily";
     return ["daily", "weekly", "monthly"].includes(key) ? key : "daily";
   }, [location.pathname]);
-  //나중에 supabase에서 데이터 받아와서 요약정보 표시하도록 수정 필요
+
   const summary = {
     daily: { a: "오늘 할 일", b: "3개", c: "완료", d: "0개" },
     weekly: { a: "주간 목표", b: "5개", c: "진행률", d: "0%" },
@@ -75,7 +94,6 @@ export default function DaysLayout() {
                   <p className="mt-1 text-sm text-gray-600">{card.desc}</p>
                 </div>
 
-                {/* active pill */}
                 <span
                   className={[
                     "rounded-full px-2.5 py-1 text-xs font-semibold",
@@ -88,7 +106,6 @@ export default function DaysLayout() {
                 </span>
               </div>
 
-              {/* lightweight summary */}
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-gray-50 px-4 py-3">
                   <p className="text-xs font-semibold text-gray-500">{s.a}</p>
@@ -105,11 +122,61 @@ export default function DaysLayout() {
               </div>
 
               <div className="mt-auto text-sm font-semibold text-blue-600">
-                {card.title} 페이지 열기 →
+                카드 클릭 시 이동 →
               </div>
             </Link>
           );
         })}
+      </div>
+
+      {/* Recent Templates 섹션 */}
+      <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-extrabold text-gray-900">최근 루틴</h3>
+            <p className="mt-1 text-sm text-gray-600">
+              클릭하면 일간 페이지로 이동합니다. (추후: 할 일 자동 추가)
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="text-sm font-semibold text-blue-600 hover:underline"
+            onClick={() => navigate("/Days/daily")}
+          >
+            일간으로 이동 →
+          </button>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+          {templates.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() =>
+                navigate("/Days/daily", {
+                  state: { templateTitle: t.title, templateItems: t.items },
+                })
+              }
+              className="group rounded-2xl border border-gray-200 bg-gray-50 p-5 text-left transition hover:bg-white hover:shadow-sm active:scale-[0.99]"
+            >
+              <div className="flex items-start justify-between">
+                <p className="text-base font-extrabold text-gray-900">
+                  {t.title}
+                </p>
+                <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600 group-hover:bg-gray-200">
+                  적용
+                </span>
+              </div>
+
+              <ul className="mt-3 space-y-1 text-sm text-gray-600">
+                {t.items.map((it) => (
+                  <li key={it}>• {it}</li>
+                ))}
+              </ul>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

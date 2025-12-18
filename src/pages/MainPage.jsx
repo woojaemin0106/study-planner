@@ -36,7 +36,7 @@ export default function MainPage() {
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="flex flex-col items-center justify-redcenter text-center">
             <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">
-              Day planner
+              Study planner
             </h1>
             <p className="mt-3 max-w-xl text-sm text-gray-700 md:text-base">
               오늘의 계획, 공부 시간, 달성률을 한 곳에서 관리하는 스터디 플래너.
@@ -44,7 +44,14 @@ export default function MainPage() {
 
             {/* Placeholder logo/icon area */}
             <div className="mt-10 flex h-28 w-28 items-center justify-center rounded-2xl bg-white/70 shadow-sm">
-              <span className="text-4xl font-black text-gray-400">μ</span>
+              <span className="text-4xl font-black text-gray-400">
+                {" "}
+                <img
+                  src="/logo.png"
+                  alt="앱 로고"
+                  className="h-8 w-auto" // h-8 (높이 2rem, 32px), w-auto (가로 비율 유지)
+                />
+              </span>
             </div>
 
             <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
