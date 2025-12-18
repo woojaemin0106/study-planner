@@ -4,7 +4,9 @@ import MainPage from "./pages/MainPage.jsx";
 import TimerPage from "./pages/TimerPage.jsx";
 import ChallengesPage from "./pages/ChallengesPage.jsx";
 import DaysLayout from "./pages/days/DaysLayout.jsx";
-
+import DaysDailyPage from "./pages/days/DaysDailyPage.jsx";
+import DaysWeeklyPage from "./pages/days/DaysWeeklyPage.jsx";
+import DaysMonthlyPage from "./pages/days/DaysMonthlyPage.jsx";
 function LoginPage() {
   return <div className="p-6">Login</div>;
 }
