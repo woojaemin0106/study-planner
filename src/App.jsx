@@ -18,29 +18,30 @@ export default function App() {
   return (
     <>
       <NavBar />
+      <div className="pt-16 min-h screen bg-gray-50">
+        <Routes>
+          {/* Home */}
+          <Route path="/" element={<MainPage />} />
 
-      <Routes>
-        {/* Home */}
-        <Route path="/" element={<MainPage />} />
+          {/* Tabs */}
+          <Route path="/Days" element={<DaysLayout />}>
+            <Route index element={<Navigate to="daily" replace />} />
+            <Route path="daily" element={<DaysDailyPage />} />
+            <Route path="weekly" element={<DaysWeeklyPage />} />
+            <Route path="monthly" element={<DaysMonthlyPage />} />
+          </Route>
 
-        {/* Tabs */}
-        <Route path="/Days" element={<DaysLayout />}>
-          <Route index element={<Navigate to="daily" replace />} />
-          <Route path="daily" element={<DaysDailyPage />} />
-          <Route path="weekly" element={<DaysWeeklyPage />} />
-          <Route path="monthly" element={<DaysMonthlyPage />} />
-        </Route>
+          <Route path="/Timer" element={<TimerPage />} />
+          <Route path="/Challenges" element={<ChallengesPage />} />
 
-        <Route path="/Timer" element={<TimerPage />} />
-        <Route path="/Challenges" element={<ChallengesPage />} />
+          {/* Auth */}
+          <Route path="/Login" element={<LoginPage />} />
+          <Route path="/Signup" element={<SignupPage />} />
 
-        {/* Auth */}
-        <Route path="/Login" element={<LoginPage />} />
-        <Route path="/Signup" element={<SignupPage />} />
-
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
     </>
   );
 }
