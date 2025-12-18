@@ -12,7 +12,6 @@ export default function DaysLayout() {
   const location = useLocation();
 
   const current = useMemo(() => {
-    // /Days/daily -> ["Days","daily"]
     const seg = location.pathname.split("/").filter(Boolean);
     const mode = seg[1] || "daily";
     return options.some((o) => o.value === mode) ? mode : "daily";
