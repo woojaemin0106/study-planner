@@ -36,7 +36,7 @@ export default function MainPage() {
       {/* Hero */}
       <section className="w-full relative bg-gray-100">
         <div className="mx-auto max-w-6xl px-6 py-20">
-          <div className="flex flex-col items-center justify-redcenter text-center">
+          <div className="flex flex-col items-center justify-center text-center">
             <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">
               Study planner
             </h1>
