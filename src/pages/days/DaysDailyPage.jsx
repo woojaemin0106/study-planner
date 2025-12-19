@@ -158,7 +158,7 @@ export default function DaysDailyPage() {
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
         {/* LEFT */}
         <div className="lg:col-span-8">
-          {/* 상단 진행률(스크린샷처럼 숫자 크게 안 보여도 됨) */}
+          {/* 상단 진행률 */}
           <div className="flex items-center justify-between">
             <div className="text-sm font-semibold text-gray-700">
               진행률 {progress}%{" "}
@@ -168,7 +168,7 @@ export default function DaysDailyPage() {
             </div>
           </div>
 
-          {/* 좌측 영역은 '리스트들(2열)' + '주간 카드(1열)' 느낌 */}
+          {/* 좌측 영역은 '리스트들(2열)' + '주간 카드(1열)' */}
           <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
             {/* Lists area (2 columns) */}
             <div className="xl:col-span-2">
@@ -184,8 +184,6 @@ export default function DaysDailyPage() {
                     onRemoveCard={(cardId) => removeCard(list.id, cardId)}
                   />
                 ))}
-
-                {/* 스크린샷 느낌의 "새로 할 일 추가" 카드 */}
                 <AddListCard onClick={addList} />
               </div>
 
@@ -197,7 +195,6 @@ export default function DaysDailyPage() {
               )}
             </div>
 
-            {/* Weekly placeholder (네 팀원이 구현 예정이면 UI 틀만) */}
             <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
               <div className="flex items-start justify-between">
                 <div>
@@ -237,9 +234,9 @@ export default function DaysDailyPage() {
         {/* RIGHT (상대가 만들 영역) */}
         <div className="lg:col-span-4 space-y-4">
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-sm font-extrabold text-gray-900">오른쪽 위젯</p>
+            <p className="text-sm font-extrabold text-gray-900"></p>
             <p className="mt-2 text-sm text-gray-600">
-              (오늘의 성취도 / 추천 루틴 등은 상대가 이 영역에서 구성)
+              (오늘의 성취도 / 추천 루틴 등 )
             </p>
           </div>
         </div>
@@ -291,14 +288,13 @@ function ListColumn({
           className="w-full rounded-xl bg-gray-50 px-3 py-2 text-sm font-extrabold text-gray-900 outline-none focus:ring-2 focus:ring-blue-200"
         />
 
-        {/* 스크린샷 느낌: 3점 메뉴(지금은 클릭 시 리스트 삭제로 단순 처리) */}
         <button
           type="button"
           onClick={onRemove}
           className="grid h-10 w-10 place-items-center rounded-xl bg-gray-50 text-gray-500 hover:bg-gray-100"
           title="리스트 삭제"
         >
-          ⋮
+          x
         </button>
       </div>
 
@@ -357,15 +353,13 @@ function ListColumn({
                   {c.text}
                 </span>
               </label>
-
-              {/* 스크린샷처럼 텍스트 버튼 대신 '⋮'로 최소화 */}
               <button
                 type="button"
                 onClick={() => onRemoveCard(c.id)}
                 className="grid h-8 w-8 place-items-center rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-100"
                 title="삭제"
               >
-                ⋮
+                x
               </button>
             </li>
           ))
