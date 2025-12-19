@@ -1,7 +1,9 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import MonthCalendar from "../components/MonthCalendar";
 
 export default function MainPage() {
+  const navigate = useNavigate();
   const quickLinks = [
     {
       title: "Days",
@@ -104,6 +106,13 @@ export default function MainPage() {
                   </div>
                 </Link>
               ))}
+            </div>
+            <div className="mt-8">
+              <MonthCalendar
+                onSelectDate={(dateObj, iso) => {
+                  navigate("/Days/daily", { state: { dateISO: iso } });
+                }}
+              />
             </div>
           </div>
 
