@@ -49,9 +49,12 @@ const EXPLORE_CHALLENGES = [
 
 export default function ChallengesPage() {
   return (
-    <div className="max-w-[1200px] mx-auto px-6 py-12 flex flex-col gap-12">
-      <header>
-        <h1 className="text-[32px] font-black text-gray-900 tracking-tight">Challenges</h1>
+    <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col gap-12">
+      <header className="flex flex-col gap-2">
+        <h1 className="text-4xl font-black text-gray-900">Challenges</h1>
+        <p className="text-base text-gray-400 font-bold">
+          달성률을 확인하고 목표를 향해 도전하세요.
+        </p>
       </header>
 
       {/* Ongoing Section */}
