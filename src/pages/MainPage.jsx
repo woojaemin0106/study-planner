@@ -127,18 +127,12 @@ export default function MainPage() {
                   </p>
                   <p className="mt-1 text-2xl font-extrabold">0%</p>
                 </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10">
-                  <span className="text-lg font-black">%</span>
-                </div>
               </div>
 
               <div className="mt-4">
                 <div className="h-2 w-full rounded-full bg-white/20">
                   <div className="h-2 w-0 rounded-full bg-white" />
                 </div>
-                <p className="mt-2 text-xs text-white/80">
-                  Tasks와 연동되면 자동으로 계산됩니다.
-                </p>
               </div>
             </div>
 
