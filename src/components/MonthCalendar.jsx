@@ -2,12 +2,9 @@ import React, { useState, useMemo } from "react";
 
 const WEEK = ["일", "월", "화", "수", "목", "금", "토"];
 
-function pad2(n) {
-  return string(n).padStart(2, "0");
-}
-
 function toISODate(date) {
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  const pad2 = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
 }
 
 function isSameDay(a, b) {
@@ -55,7 +52,7 @@ function MonthCalendar({ initialMonth, onSelectDate }) {
     );
   };
   const handleClick = (cell) => {
-    if (cell.inMonth) return;
+    if (!cell.inMonth) return;
     setSelected(cell.dateObj);
     const iso = toISODate(cell.dateObj);
     onSelectDate?.(cell.dateObj, iso);
@@ -109,9 +106,8 @@ function MonthCalendar({ initialMonth, onSelectDate }) {
               className={[
                 "h-10 rounded-xl text-sm font-semibold transition",
                 cell.inMonth
-                  ? "bg-gray-50 text-gray-900 hover:bg-gray-100 active:scale-[0.99]"
+                  ? "bg-gray-50 text-gray-900 hover:bg-gray-100 hover:ring-1 hover:ring-gray-300 active:scale-[0.99]"
                   : "bg-transparent text-gray-300 cursor-default",
-                isToday ? "ring-1 ring-gray-300" : "",
                 isSelected ? "bg-blue-600 text-white hover:bg-blue-700" : "",
               ].join(" ")}
             >
