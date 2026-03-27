@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import CircularProgressBar from "../../components/CircularProgressBar";
 
 /** -------- date utils -------- */
 function pad2(n) {
@@ -12,7 +13,6 @@ function fromISO(iso) {
   const [y, m, dd] = iso.split("-").map(Number);
   return new Date(y, m - 1, dd);
 }
-/** Monday-start week */
 function getWeekStartISO(anchorISO) {
   const d = fromISO(anchorISO);
   const day = d.getDay(); // 0 Sun ~ 6 Sat
@@ -25,17 +25,6 @@ function addDaysISO(iso, n) {
   d.setDate(d.getDate() + n);
   return toISO(d);
 }
-function formatRangeLabel(weekStartISO) {
-  const start = fromISO(weekStartISO);
-  const end = fromISO(addDaysISO(weekStartISO, 6));
-  const s = `${start.getFullYear()}.${pad2(start.getMonth() + 1)}.${pad2(
-    start.getDate()
-  )}`;
-  const e = `${end.getFullYear()}.${pad2(end.getMonth() + 1)}.${pad2(
-    end.getDate()
-  )}`;
-  return `${s} ~ ${e}`;
-}
 function safeJSONParse(raw, fallback) {
   try {
     return raw ? JSON.parse(raw) : fallback;
@@ -43,104 +32,105 @@ function safeJSONParse(raw, fallback) {
     return fallback;
   }
 }
-function uid() {
-  if (typeof crypto !== "undefined" && crypto.randomUUID)
-    return crypto.randomUUID();
-  return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-}
 
-const DOW_KO_BY_GETDAY = [
-  "일요일",
-  "월요일",
-  "화요일",
-  "수요일",
-  "목요일",
-  "금요일",
-  "토요일",
-];
+const DOW_KO = ["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"];
 const CHART_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
+
+const DEFAULT_ROUTINES = [
+  { title: "아침 루틴", items: ["영어 단어 읽기", "아침 기상"], color: "blue" },
+  { title: "시험 대비", items: ["시험 20분 전", "오답 노트"], color: "purple" },
+  { title: "코딩 루틴", items: ["백준 문제 풀기", "오전 루틴"], color: "blue" },
+];
 
 export default function DaysWeeklyPage() {
   const navigate = useNavigate();
-
   const todayISO = useMemo(() => toISO(new Date()), []);
   const [anchorISO, setAnchorISO] = useState(todayISO);
-
   const weekStartISO = useMemo(() => getWeekStartISO(anchorISO), [anchorISO]);
   const weekDates = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDaysISO(weekStartISO, i)),
     [weekStartISO]
   );
 
-  const storageKey = useMemo(
-    () => `study-planner:weekly:${weekStartISO}`,
-    [weekStartISO]
-  );
-
-  // { days: { [dateISO]: { tasks: [{id,text,done,createdAt}] } } }
+  const storageKey = useMemo(() => `study-planner:weekly:${weekStartISO}`, [weekStartISO]);
+  const configKey = useMemo(() => `study-planner:weekly-config:${weekStartISO}`, [weekStartISO]);
   const [weekly, setWeekly] = useState({ days: {} });
-
-  // add modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalDayISO, setModalDayISO] = useState("");
-  const [modalText, setModalText] = useState("");
+  const [visibleCount, setVisibleCount] = useState(7);
 
   /** load */
   useEffect(() => {
     const raw = localStorage.getItem(storageKey);
     const loaded = safeJSONParse(raw, { days: {} });
-
     const normalized = { days: { ...(loaded.days || {}) } };
-    weekDates.forEach((iso) => {
-      if (!normalized.days[iso]) normalized.days[iso] = { tasks: [] };
-      if (!Array.isArray(normalized.days[iso].tasks))
-        normalized.days[iso].tasks = [];
+    
+    // Config for visible days
+    const configRaw = localStorage.getItem(configKey);
+    const config = safeJSONParse(configRaw, { visibleCount: 7 }); 
+    setVisibleCount(config.visibleCount);
+
+    // Initialize mock data if empty
+    weekDates.forEach((iso, idx) => {
+      if (!normalized.days[iso] || normalized.days[iso].tasks.length === 0) {
+        if (idx === 0) {
+          normalized.days[iso] = { tasks: [
+            { id: 1, text: "영어 단어 30개", done: true },
+            { id: 2, text: "복습 20분", done: false },
+            { id: 3, text: "문제 1세트 풀기", done: false },
+          ]};
+        } else if (idx === 1) {
+          normalized.days[iso] = { tasks: [
+            { id: 4, text: "알고리즘 2문제 풀기", done: true },
+            { id: 5, text: "풀이 과정 정리", done: false },
+            { id: 6, text: "오답 노트 업데이트", done: false },
+          ]};
+        } else {
+          normalized.days[iso] = { tasks: [
+            { id: Math.random(), text: "할 일 추가예시", done: false },
+          ]};
+        }
+      }
     });
 
     setWeekly(normalized);
-  }, [storageKey, weekDates]);
+  }, [storageKey, configKey, weekDates]);
 
   /** save */
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(weekly));
+    if (Object.keys(weekly.days).length > 0) {
+      localStorage.setItem(storageKey, JSON.stringify(weekly));
+    }
   }, [storageKey, weekly]);
 
   /** actions */
-  const addTask = (dayISO, text) => {
-    const v = text.trim();
-    if (!v) return;
-
-    setWeekly((prev) => {
-      const day = prev.days?.[dayISO] || { tasks: [] };
-      const nextTask = {
-        id: uid(),
-        text: v,
-        done: false,
-        createdAt: Date.now(),
-      };
-      return {
-        ...prev,
-        days: {
-          ...prev.days,
-          [dayISO]: { ...day, tasks: [nextTask, ...(day.tasks || [])] },
-        },
-      };
-    });
+  const handleAddDay = () => {
+    if (visibleCount < 7) {
+      const next = visibleCount + 1;
+      setVisibleCount(next);
+      localStorage.setItem(configKey, JSON.stringify({ visibleCount: next }));
+    } else {
+      const nextWeekStart = addDaysISO(weekStartISO, 7);
+      setAnchorISO(nextWeekStart);
+      // Ensure the next week starts with 1 day visible
+      localStorage.setItem(`study-planner:weekly-config:${nextWeekStart}`, JSON.stringify({ visibleCount: 1 }));
+      setVisibleCount(1);
+    }
   };
 
-  const toggleTask = (dayISO, taskId) => {
+  const addTask = (dayISO, text = "새로운 할 일") => {
+    const v = text.trim();
+    if (!v) return;
     setWeekly((prev) => {
-      const day = prev.days?.[dayISO] || { tasks: [] };
+      const day = prev.days[dayISO] || { tasks: [] };
+      const nextTask = {
+        id: Date.now() + Math.random(),
+        text: v,
+        done: false,
+      };
       return {
         ...prev,
         days: {
           ...prev.days,
-          [dayISO]: {
-            ...day,
-            tasks: (day.tasks || []).map((t) =>
-              t.id === taskId ? { ...t, done: !t.done } : t
-            ),
-          },
+          [dayISO]: { ...day, tasks: [...day.tasks, nextTask] },
         },
       };
     });
@@ -148,326 +138,221 @@ export default function DaysWeeklyPage() {
 
   const removeTask = (dayISO, taskId) => {
     setWeekly((prev) => {
-      const day = prev.days?.[dayISO] || { tasks: [] };
+      const day = prev.days[dayISO];
+      if (!day) return prev;
       return {
         ...prev,
         days: {
           ...prev.days,
           [dayISO]: {
             ...day,
-            tasks: (day.tasks || []).filter((t) => t.id !== taskId),
+            tasks: day.tasks.filter((t) => t.id !== taskId),
           },
         },
       };
     });
   };
 
-  const openAddModal = () => {
-    setModalDayISO(weekDates[0] || weekStartISO);
-    setModalText("");
-    setIsModalOpen(true);
-  };
-
-  const submitModal = () => {
-    addTask(modalDayISO, modalText);
-    setIsModalOpen(false);
+  const toggleTask = (dayISO, taskId) => {
+    setWeekly((prev) => {
+      const day = prev.days[dayISO];
+      if (!day) return prev;
+      return {
+        ...prev,
+        days: {
+          ...prev.days,
+          [dayISO]: {
+            ...day,
+            tasks: day.tasks.map((t) => t.id === taskId ? { ...t, done: !t.done } : t),
+          },
+        },
+      };
+    });
   };
 
   /** metrics */
+  const visibleDates = useMemo(() => weekDates.slice(0, visibleCount), [weekDates, visibleCount]);
+
   const { total, done, percent, perDayPercent } = useMemo(() => {
-    const allTasks = weekDates.flatMap(
-      (iso) => weekly.days?.[iso]?.tasks || []
-    );
+    const allTasks = visibleDates.flatMap((iso) => weekly.days?.[iso]?.tasks || []);
     const d = allTasks.filter((t) => t.done).length;
     const t = allTasks.length;
     const p = t === 0 ? 0 : Math.round((d / t) * 100);
 
-    const per = weekDates.map((iso) => {
+    const per = weekDates.map((iso, idx) => {
+      if (idx >= visibleCount) return 0; // Hide bars for non-visible days
       const tasks = weekly.days?.[iso]?.tasks || [];
       if (tasks.length === 0) return 0;
       const dd = tasks.filter((x) => x.done).length;
       return Math.round((dd / tasks.length) * 100);
     });
 
-    return { total: t, done: d, percent: p, perDayPercent: per };
-  }, [weekly, weekDates]);
-
-  /** routines (UI only for now) */
-  const routines = [
-    {
-      id: "morning",
-      title: "아침 루틴",
-      items: ["영어 단어 읽기", "아침 기상"],
-    },
-    { id: "exam", title: "시험 대비", items: ["시험 20분 전", "오답 노트"] },
-    {
-      id: "coding",
-      title: "코딩 루틴",
-      items: ["백준 문제 풀기", "오전 루틴!"],
-    },
-  ];
+    // Add average of the week
+    const avg = per.filter(v => v > 0).length > 0
+      ? Math.round(per.reduce((a, b) => a + b, 0) / per.filter(v => v > 0).length)
+      : 0;
+    
+    return { total: t, done: d, percent: p, perDayPercent: [...per, avg] };
+  }, [weekly, weekDates, visibleDates, visibleCount]);
 
   return (
-    <div className="mx-auto w-full max-w-[1500px] px-10 py-12">
-      <div className="flex flex-col gap-12 lg:flex-row lg:gap-16">
-        {/* LEFT SIDEBAR */}
-        <aside className="shrink-0 lg:w-[220px]">
-          <Link
-            to="/Days"
-            className="text-sm font-semibold text-blue-600 hover:underline"
-          >
-            ← Days로 돌아가기
-          </Link>
+    <div className="bg-gray-50/50 min-h-screen py-12 px-20 font-sans">
+      <div className="max-w-[1600px] mx-auto">
+        <div className="flex flex-col lg:flex-row gap-12">
+          
+          {/* LEFT: Weekly Cards */}
+          <div className="flex-1 flex flex-col">
+            <div className="mb-8 flex flex-col gap-4">
+              <Link to="/Days" className="text-blue-600 text-sm font-bold flex items-center gap-1">
+                <span className="text-lg">←</span> Days로 돌아가기
+              </Link>
+              <div className="flex items-center justify-between">
+                <div className="flex items-baseline gap-4">
+                  <h1 className="text-[40px] font-black text-gray-900 leading-none">주간</h1>
+                  <h2 className="text-[28px] font-bold text-gray-900 ml-12 leading-none">Week-List</h2>
+                </div>
+                {/* Week Pagination */}
+                <div className="flex items-center gap-2 pr-4">
+                  <button 
+                    onClick={() => setAnchorISO(addDaysISO(anchorISO, -7))}
+                    className="w-10 h-10 rounded-xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-all font-bold"
+                  >
+                    ←
+                  </button>
+                  <button 
+                    onClick={() => setAnchorISO(addDaysISO(anchorISO, 7))}
+                    className="w-10 h-10 rounded-xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-all font-bold"
+                  >
+                    →
+                  </button>
+                </div>
+              </div>
+            </div>
 
-          <div className="mt-6 text-2xl font-extrabold text-gray-900">주간</div>
-          <div className="mt-3 text-sm font-semibold text-gray-500">
-            {formatRangeLabel(weekStartISO)}
-          </div>
-        </aside>
-
-        {/* MAIN */}
-        <main className="min-w-0 flex-1">
-          {/* header: title + date controls (너희가 유지하고 싶어서 남김) */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <h1 className="text-3xl font-extrabold text-gray-900">Week-List</h1>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setAnchorISO(addDaysISO(anchorISO, -7))}
-                className="h-11 w-11 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 active:scale-[0.99]"
-                title="이전 주"
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start content-start">
+              {visibleDates.map((iso, idx) => {
+                const d = fromISO(iso);
+                const dayName = DOW_KO[idx];
+                const dateLabel = `${d.getMonth() + 1}/${d.getDate()}`;
+                const dayData = weekly.days[iso] || { tasks: [] };
+                return (
+                  <DayCard 
+                    key={iso}
+                    title={dayName}
+                    date={dateLabel}
+                    tasks={dayData.tasks}
+                    onToggle={(taskId) => toggleTask(iso, taskId)}
+                    onGoDaily={() => navigate(`/Days/daily?date=${iso}`)}
+                    onAddTask={(text) => addTask(iso, text)}
+                  />
+                );
+              })}
+              <div 
+                onClick={handleAddDay}
+                className="flex items-center gap-3 p-4 rounded-2xl border-2 border-dashed border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all group min-h-[220px] flex-col justify-center cursor-pointer"
               >
-                ←
-              </button>
-
-              <input
-                type="date"
-                value={anchorISO}
-                onChange={(e) => setAnchorISO(e.target.value)}
-                className="h-11 w-[240px] rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-900"
-              />
-
-              <button
-                type="button"
-                onClick={() => setAnchorISO(addDaysISO(anchorISO, 7))}
-                className="h-11 w-11 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 active:scale-[0.99]"
-                title="다음 주"
-              >
-                →
-              </button>
+                <div className="w-10 h-10 rounded-full border-2 border-blue-500 flex items-center justify-center text-blue-500 font-bold text-2xl group-hover:bg-blue-500 group-hover:text-white transition-all">
+                  +
+                </div>
+                <span className="font-bold text-gray-700">새로 할 일 추가</span>
+              </div>
             </div>
           </div>
 
-          {/* FIGMA GRID
-              lg에서 6컬럼 고정:
-              [Day, Day, Day, Day, Donut, (empty)]
-              [Day, Day, Day, Chart, Routines(span2)]
-          */}
-          <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-[repeat(4,220px)_240px_240px] lg:gap-6">
-            {/* Row 1: Mon~Thu */}
-            {weekDates.slice(0, 4).map((dayISO) => {
-              const d = fromISO(dayISO);
-              const title = DOW_KO_BY_GETDAY[d.getDay()];
-              const tasks = weekly.days?.[dayISO]?.tasks || [];
+          {/* RIGHT: Status & Chart */}
+          <div className="w-full lg:w-[480px] flex flex-col gap-6">
+            
+            {/* Weekly Achievement */}
+            <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col items-center gap-4">
+              <h3 className="text-lg font-black text-gray-900">주간 성취도</h3>
+              <CircularProgressBar progress={percent} />
+              <p className="text-blue-600 font-black text-xl">{done}/{total} 완료</p>
+            </div>
 
-              return (
-                <DayCard
-                  key={dayISO}
-                  title={title}
-                  dateLabel={`${pad2(d.getMonth() + 1)}/${pad2(d.getDate())}`}
-                  tasks={tasks}
-                  onToggle={(taskId) => toggleTask(dayISO, taskId)}
-                  onRemove={(taskId) => removeTask(dayISO, taskId)}
-                  onGoDaily={() => navigate(`/Days/daily?date=${dayISO}`)}
-                />
-              );
-            })}
+            {/* Daily Chart */}
+            <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col gap-6">
+              <h3 className="text-lg font-black text-gray-900">요일별 성취도</h3>
+              <WeekBarChart values={perDayPercent} />
+            </div>
 
-            {/* Row 1: Donut (col 5) */}
-            <WeeklyDonut percent={percent} done={done} total={total} />
+            {/* Recommended Routines */}
+            <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col gap-6">
+              <h3 className="text-xl font-black text-gray-900">추천 루틴</h3>
+              <div className="grid grid-cols-3 gap-3">
+                {DEFAULT_ROUTINES.map((routine, i) => (
+                  <RoutineCard key={i} {...routine} />
+                ))}
+              </div>
+            </div>
 
-            {/* Row 1: empty (col 6) - 피그마 여백 */}
-            <div className="hidden lg:block" />
-
-            {/* Row 2: Fri~Sun */}
-            {weekDates.slice(4, 7).map((dayISO) => {
-              const d = fromISO(dayISO);
-              const title = DOW_KO_BY_GETDAY[d.getDay()];
-              const tasks = weekly.days?.[dayISO]?.tasks || [];
-
-              return (
-                <DayCard
-                  key={dayISO}
-                  title={title}
-                  dateLabel={`${pad2(d.getMonth() + 1)}/${pad2(d.getDate())}`}
-                  tasks={tasks}
-                  onToggle={(taskId) => toggleTask(dayISO, taskId)}
-                  onRemove={(taskId) => removeTask(dayISO, taskId)}
-                  onGoDaily={() => navigate(`/Days/daily?date=${dayISO}`)}
-                />
-              );
-            })}
-
-            {/* Row 2: Chart (col 4) */}
-            <WeekBarChart values={perDayPercent} />
-
-            {/* Row 2: Routines (col 5~6 span2) */}
-            <RoutinePanel routines={routines} className="lg:col-span-2" />
           </div>
 
-          {/* Add button (피그마처럼 왼쪽 아래) */}
-          <button
-            type="button"
-            onClick={openAddModal}
-            className="mt-10 inline-flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-7 py-5 text-sm font-semibold text-gray-900 shadow-sm transition hover:shadow-md active:scale-[0.99]"
-          >
-            <span className="grid h-11 w-11 place-items-center rounded-full border border-blue-200 bg-blue-50 text-blue-600 font-extrabold">
-              +
-            </span>
-            새로 할 일 추가
-          </button>
-        </main>
+        </div>
       </div>
-
-      {/* Modal */}
-      {isModalOpen && (
-        <Modal onClose={() => setIsModalOpen(false)} title="할 일 추가">
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs font-semibold text-gray-500">
-                요일 선택
-              </label>
-              <select
-                value={modalDayISO}
-                onChange={(e) => setModalDayISO(e.target.value)}
-                className="mt-2 h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-900"
-              >
-                {weekDates.map((iso) => {
-                  const d = fromISO(iso);
-                  const dow = d.getDay();
-                  return (
-                    <option key={iso} value={iso}>
-                      {DOW_KO_BY_GETDAY[dow]} ({pad2(d.getMonth() + 1)}/
-                      {pad2(d.getDate())})
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-gray-500">
-                내용
-              </label>
-              <input
-                value={modalText}
-                onChange={(e) => setModalText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") submitModal();
-                }}
-                placeholder="예) 알고리즘 2문제"
-                className="mt-2 h-11 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm outline-none focus:border-gray-400"
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="h-11 rounded-xl bg-gray-100 px-4 text-sm font-semibold text-gray-800 hover:bg-gray-200 active:scale-[0.99]"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={submitModal}
-                className="h-11 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 active:scale-[0.99]"
-              >
-                추가
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 }
 
-/** -------- UI components -------- */
+function DayCard({ title, date, tasks, onToggle, onGoDaily, onAddTask }) {
+  const [isAdding, setIsAdding] = useState(false);
+  const [newText, setNewText] = useState("");
 
-function DayCard({ title, dateLabel, tasks, onToggle, onRemove, onGoDaily }) {
-  const preview = tasks.slice(0, 3);
+  const handleAdd = () => {
+    if (newText.trim()) {
+      onAddTask(newText);
+      setNewText("");
+      setIsAdding(false);
+    } else {
+      setIsAdding(false);
+    }
+  };
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-2">
+    <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col min-h-[220px]">
+      <div className="flex items-start justify-between mb-2">
         <div>
-          <div className="text-sm font-extrabold text-gray-900">{title}</div>
-          <div className="mt-1 text-xs font-semibold text-gray-500">
-            {dateLabel}
-          </div>
+          <h4 className="font-extrabold text-gray-900 text-base">{title}</h4>
+          <p className="text-gray-400 text-xs font-bold">{date}</p>
         </div>
-
-        {/* 나중에 DropdownMenu 붙일 자리 */}
-        <button
-          type="button"
-          className="grid h-9 w-9 place-items-center rounded-xl bg-gray-50 text-gray-500 hover:bg-gray-100"
-          title="옵션(추후)"
-          aria-label="옵션"
+        <button 
+          onClick={() => setIsAdding(!isAdding)}
+          className="text-gray-300 font-bold text-xl px-2 hover:text-gray-500"
         >
           ⋮
         </button>
       </div>
 
-      <div className="mt-3 rounded-xl bg-gray-50 px-3 py-3">
-        {preview.length === 0 ? (
-          <div className="text-center text-xs font-semibold text-gray-500">
-            할 일을 추가해주세요.
+      <div className="flex-1 space-y-2 mt-2">
+        {tasks.map(t => (
+          <div key={t.id} className="flex items-center gap-2">
+            <div 
+              onClick={() => onToggle(t.id)}
+              className={`w-4 h-4 rounded flex items-center justify-center cursor-pointer transition-all border ${t.done ? 'bg-blue-500 border-blue-500 text-white' : 'bg-gray-50 border-gray-200'}`}
+            >
+              {t.done && <span className="text-[8px] font-black transform scale-125">✓</span>}
+            </div>
+            <span className={`text-[11px] font-bold truncate ${t.done ? 'text-gray-300 line-through' : 'text-gray-700'}`}>
+              {t.text}
+            </span>
           </div>
-        ) : (
-          <ul className="space-y-2">
-            {preview.map((t) => (
-              <li
-                key={t.id}
-                className="flex items-center justify-between gap-2"
-              >
-                <label className="flex min-w-0 items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={t.done}
-                    onChange={() => onToggle(t.id)}
-                    className="h-4 w-4"
-                  />
-                  <span
-                    className={[
-                      "min-w-0 truncate text-xs font-semibold",
-                      t.done ? "text-gray-400 line-through" : "text-gray-900",
-                    ].join(" ")}
-                    title={t.text}
-                  >
-                    {t.text}
-                  </span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => onRemove(t.id)}
-                  className="text-xs font-semibold text-gray-400 hover:text-gray-700"
-                  title="삭제"
-                >
-                  x
-                </button>
-              </li>
-            ))}
-          </ul>
+        ))}
+        {isAdding && (
+          <input 
+            autoFocus
+            value={newText}
+            onChange={(e) => setNewText(e.target.value)}
+            onBlur={handleAdd}
+            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+            placeholder="할 일 입력"
+            className="text-[11px] font-bold w-full bg-blue-50 rounded px-1 outline-none"
+          />
         )}
       </div>
 
-      <div className="mt-3 flex justify-end">
-        <button
-          type="button"
+      <div className="mt-4 flex justify-end">
+        <button 
           onClick={onGoDaily}
-          className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 active:scale-[0.99]"
+          className="bg-blue-600 text-white text-[10px] font-black px-4 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
         >
           보기
         </button>
@@ -476,119 +361,79 @@ function DayCard({ title, dateLabel, tasks, onToggle, onRemove, onGoDaily }) {
   );
 }
 
-function WeeklyDonut({ percent, done, total }) {
-  const ringStyle = {
-    background: `conic-gradient(#2563eb ${percent}%, #e5e7eb 0)`,
-  };
-
-  return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="text-sm font-extrabold text-gray-900 text-center">
-        주간 성취도
-      </div>
-
-      <div className="mt-4 grid place-items-center">
-        <div
-          className="grid h-24 w-24 place-items-center rounded-full"
-          style={ringStyle}
-        >
-          <div className="grid h-16 w-16 place-items-center rounded-full bg-white">
-            <div className="text-lg font-extrabold text-gray-900">
-              {percent}%
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-2 text-sm font-semibold text-blue-600">
-          {done}/{total} 완료
-        </div>
-      </div>
-    </div>
-  );
-}
+const BAR_LABELS = ["월", "화", "수", "목", "금", "토", "일", "평균"];
 
 function WeekBarChart({ values }) {
+  const yLabels = [100, 75, 45, 0];
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="text-sm font-extrabold text-gray-900">요일별 성취도</div>
+    <div className="flex flex-col gap-2 mt-2">
+      <div className="relative h-[140px] w-full mt-4">
+        {/* Grid Lines */}
+        <div className="absolute inset-0 flex flex-col justify-between py-1 pointer-events-none">
+          {yLabels.map(label => (
+            <div key={label} className="flex items-center gap-2 h-0">
+              <span className="text-[10px] font-bold text-gray-300 w-6 text-right">{label}</span>
+              <div className="flex-1 border-t border-gray-100"></div>
+            </div>
+          ))}
+        </div>
 
-      <div className="mt-3 h-28 w-full rounded-xl bg-gray-50 p-3">
-        <div className="flex h-full items-end justify-between gap-2">
-          {values.map((v, idx) => (
-            <div key={idx} className="flex w-full flex-col items-center gap-2">
-              <div className="relative h-20 w-full rounded-md bg-gray-200">
-                <div
-                  className="absolute bottom-0 left-0 w-full rounded-md bg-blue-600"
-                  style={{ height: `${v}%` }}
-                  title={`${CHART_LABELS[idx]} ${v}%`}
-                />
-              </div>
-              <div className="text-[11px] font-semibold text-gray-600">
-                {CHART_LABELS[idx]}
+        {/* Bars */}
+        <div className="absolute inset-0 flex items-end justify-between px-6 pb-[2px]">
+          {values.slice(0, 8).map((v, i) => (
+            <div key={i} className="flex flex-col items-center gap-2 group relative flex-1">
+              {/* Persistent Value Label */}
+              {v > 0 && (
+                <span className="absolute -top-5 text-[9px] font-black text-blue-600 transition-all duration-300">
+                  {v}%
+                </span>
+              )}
+              <div 
+                className="w-5 bg-blue-600 rounded-t-sm transition-all duration-500 ease-out mx-auto shadow-[0_-2px_4px_rgba(37,99,235,0.2)]"
+                style={{ height: `${v}%`, transitionDelay: `${i * 50}ms` }}
+              >
+                {/* Tooltip on hover (extra) */}
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                  {v}%
+                </div>
               </div>
             </div>
           ))}
         </div>
       </div>
-    </div>
-  );
-}
-
-/** 피그마처럼: 추천 루틴 “패널 1개” + 내부 3개 카드 가로 */
-function RoutinePanel({ routines, className = "" }) {
-  return (
-    <div
-      className={`rounded-2xl border border-gray-200 bg-white p-5 shadow-sm ${className}`}
-    >
-      <div className="text-base font-extrabold text-gray-900">추천 루틴</div>
-
-      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-        {routines.map((r) => (
-          <div
-            key={r.id}
-            className="rounded-2xl border border-gray-200 bg-white p-4"
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-extrabold text-gray-900">
-                {r.title}
-              </div>
-              <button
-                type="button"
-                className="rounded-xl bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-200 active:scale-[0.99]"
-                title="저장(추후)"
-              >
-                저장
-              </button>
-            </div>
-
-            <ul className="mt-3 space-y-1">
-              {r.items.map((it, i) => (
-                <li key={`${r.id}-${i}`} className="text-sm text-gray-700">
-                  • {it}
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-4 flex justify-end">
-              <button
-                type="button"
-                className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 active:scale-[0.99]"
-                title="바로가기(추후)"
-              >
-                바로가기
-              </button>
-            </div>
-          </div>
+      
+      {/* Labels */}
+      <div className="flex items-center justify-between px-6 pl-[38px]">
+        {BAR_LABELS.map((l, i) => (
+          <span key={i} className={`text-[10px] font-black flex-1 text-center ${i === 7 ? 'text-blue-600' : 'text-gray-400'}`}>{l}</span>
         ))}
       </div>
-
-      <p className="mt-4 text-xs text-gray-500">
-        추천 루틴 저장/적용은 다음 PR에서 템플릿 기능으로 연결하면 됩니다.
-      </p>
     </div>
   );
 }
 
+function RoutineCard({ title, items }) {
+  return (
+    <div className="min-w-[120px] bg-gray-50 rounded-2xl p-4 flex flex-col gap-3 relative">
+      <div>
+        <h4 className="font-black text-gray-900 text-[11px]">{title}</h4>
+        <ul className="mt-2 flex flex-col gap-1">
+          {items.map((item, i) => (
+            <li key={i} className="text-gray-400 text-[9px] font-bold flex items-center gap-1">
+              <span>•</span> {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="flex items-center justify-between mt-auto">
+        <span className="text-gray-300 text-[8px] font-bold">저장</span>
+        <button className="bg-blue-600 text-white text-[9px] font-black py-1 px-2 rounded-lg">
+          바로가기
+        </button>
+      </div>
+    </div>
+  );
+}
 function Modal({ title, children, onClose }) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4">
