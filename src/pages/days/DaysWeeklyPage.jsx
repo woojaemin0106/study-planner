@@ -203,13 +203,16 @@ export default function DaysWeeklyPage() {
           {/* LEFT: Weekly Cards */}
           <div className="flex-1 flex flex-col">
             <div className="mb-8 flex flex-col gap-4">
-              <Link to="/Days" className="text-blue-600 text-sm font-bold flex items-center gap-1">
+              <Link to="/Days" className="text-blue-600 text-sm font-bold flex items-center gap-1 mb-4">
                 <span className="text-lg">←</span> Days로 돌아가기
               </Link>
               <div className="flex items-center justify-between">
-                <div className="flex items-baseline gap-4">
+                <div>
                   <h1 className="text-[40px] font-black text-gray-900 leading-none">주간</h1>
-                  <h2 className="text-[28px] font-bold text-gray-900 ml-12 leading-none">Week-List</h2>
+                  <div className="flex items-baseline gap-4 mt-2">
+                    <h2 className="text-[28px] font-bold text-gray-900 leading-none">Week-List</h2>
+                    <p className="text-gray-400 font-bold text-xl">{anchorISO}</p>
+                  </div>
                 </div>
                 {/* Week Pagination */}
                 <div className="flex items-center gap-2 pr-4">

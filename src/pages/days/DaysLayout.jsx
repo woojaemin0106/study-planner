@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const cards = [
@@ -25,6 +25,67 @@ const cards = [
 export default function DaysLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [hoveredKey, setHoveredKey] = useState(null);
+
+  const [summary, setSummary] = useState({
+    daily: { a: "오늘 할 일", b: "0개", c: "완료", d: "0개" },
+    weekly: { a: "주간 목표", b: "0개", c: "진행률", d: "0%" },
+    monthly: { a: "이번 달", b: "0개", c: "완료", d: "0개" },
+  });
+
+  useEffect(() => {
+    const pad2 = (n) => String(n).padStart(2, "0");
+    const now = new Date();
+    const todayISO = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+
+    const getWeekStartISO = (dateStr) => {
+      const [y, m, dd] = dateStr.split("-").map(Number);
+      const d = new Date(y, m - 1, dd);
+      const day = d.getDay(); 
+      const diffToMon = (day + 6) % 7;
+      d.setDate(d.getDate() - diffToMon);
+      return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+    };
+
+    // 1. Daily Sync
+    const dailyRaw = localStorage.getItem(`study-planner:daily-board:${todayISO}`);
+    let dTotal = 0, dDone = 0;
+    if (dailyRaw) {
+      const dData = JSON.parse(dailyRaw);
+      const cards = dData.lists.flatMap(l => l.cards);
+      dTotal = cards.length;
+      dDone = cards.filter(c => c.done).length;
+    }
+
+    // 2. Weekly Sync
+    const weekStart = getWeekStartISO(todayISO);
+    const weeklyRaw = localStorage.getItem(`study-planner:weekly:${weekStart}`);
+    let wTotal = 0, wDone = 0;
+    if (weeklyRaw) {
+      const wData = JSON.parse(weeklyRaw);
+      Object.values(wData.days || {}).forEach(day => {
+        if (day.tasks) {
+          wTotal += day.tasks.length;
+          wDone += day.tasks.filter(t => t.done).length;
+        }
+      });
+    }
+
+    // 3. Monthly Sync
+    const monthlyRaw = localStorage.getItem('study-planner:monthly-board');
+    let mTotal = 0, mDone = 0;
+    if (monthlyRaw) {
+      const mData = JSON.parse(monthlyRaw);
+      mTotal = mData.length;
+      mDone = mData.filter(d => d.completed).length;
+    }
+
+    setSummary({
+      daily: { a: "오늘 할 일", b: `${dTotal}개`, c: "완료", d: `${dDone}개` },
+      weekly: { a: "주간 목표", b: `${wTotal}개`, c: "진행률", d: `${wTotal > 0 ? Math.round((wDone / wTotal) * 100) : 0}%` },
+      monthly: { a: "이번 달", b: `${mTotal}개`, c: "완료", d: `${mDone}개` },
+    });
+  }, []);
 
   const templates = [
     {
@@ -50,79 +111,79 @@ export default function DaysLayout() {
     return ["daily", "weekly", "monthly"].includes(key) ? key : "daily";
   }, [location.pathname]);
 
-  const summary = {
-    daily: { a: "오늘 할 일", b: "3개", c: "완료", d: "0개" },
-    weekly: { a: "주간 목표", b: "5개", c: "진행률", d: "0%" },
-    monthly: { a: "이번 달", b: "12건", c: "중요 일정", d: "0건" },
-  };
-
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-10">
       {/* Header */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-extrabold text-gray-900">Days</h1>
-        <p className="text-sm text-gray-600">
+        <h1 className="text-4xl font-black text-gray-900">Days</h1>
+        <p className="text-base text-gray-400 font-bold">
           일간/주간/월간을 한눈에 보고, 클릭해서 해당 페이지로 이동하세요.
         </p>
       </div>
 
       {/* Overview cards */}
-      <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
         {cards.map((card) => {
-          const isActive = activeKey === card.key;
+          const isHovered = hoveredKey === card.key;
+          const showCurrentView = isHovered;
           const s = summary[card.key];
 
           return (
             <Link
               key={card.key}
               to={card.to}
+              onPointerEnter={() => {
+                setHoveredKey(card.key);
+              }}
+              onPointerLeave={() => {
+                setHoveredKey(null);
+              }}
               className={[
-                "min-h-100 flex flex-col group rounded-2xl border bg-white p-5 shadow-sm transition",
-                "hover:-translate-y-0.5 hover:shadow-md",
-                "active:scale-[0.99]",
-                "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
-                isActive
-                  ? "border-blue-300 ring-1 ring-blue-200"
-                  : "border-gray-200 hover:border-gray-300",
+                "min-h-100 flex flex-col group rounded-3xl border bg-white p-6 shadow-sm transition-all duration-300",
+                "hover:-translate-y-1 hover:shadow-xl",
+                "active:scale-[0.98]",
+                isHovered
+                  ? "border-blue-500 bg-blue-50/10"
+                  : "border-gray-100 bg-white",
               ].join(" ")}
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-lg font-extrabold text-gray-900">
+                  <h2 className="text-2xl font-black text-gray-900 leading-tight">
                     {card.title}
                   </h2>
-                  <p className="mt-1 text-sm text-gray-600">{card.desc}</p>
+                  <p className="mt-1 text-sm text-gray-400 font-bold leading-tight">{card.desc}</p>
                 </div>
 
                 <span
                   className={[
-                    "rounded-full px-2.5 py-1 text-xs font-semibold",
-                    isActive
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-gray-600 group-hover:bg-gray-200",
+                    "rounded-full px-4 py-1.5 text-xs font-black transition-all duration-300",
+                    showCurrentView
+                      ? "bg-blue-600 text-white shadow-md scale-105"
+                      : "bg-gray-100 text-gray-400 font-bold",
                   ].join(" ")}
                 >
-                  {isActive ? "현재 보기" : "이동"}
+                  {showCurrentView ? "현재 보기" : "이동"}
                 </span>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-gray-50 px-4 py-3">
-                  <p className="text-xs font-semibold text-gray-500">{s.a}</p>
-                  <p className="mt-1 text-base font-extrabold text-gray-900">
+              <div className="mt-6 grid grid-cols-2 gap-4">
+                <div className="rounded-2xl bg-gray-50 p-4 border border-transparent group-hover:bg-white group-hover:border-blue-100 transition-colors">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-tight">{s.a}</p>
+                  <p className="mt-1 text-xl font-black text-gray-900">
                     {s.b}
                   </p>
                 </div>
-                <div className="rounded-xl bg-gray-50 px-4 py-3">
-                  <p className="text-xs font-semibold text-gray-500">{s.c}</p>
-                  <p className="mt-1 text-base font-extrabold text-gray-900">
+                <div className="rounded-2xl bg-gray-50 p-4 border border-transparent group-hover:bg-white group-hover:border-blue-100 transition-colors">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-tight">{s.c}</p>
+                  <p className="mt-1 text-xl font-black text-gray-900">
                     {s.d}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-auto text-sm font-semibold text-blue-600">
-                카드 클릭 시 이동 →
+              <div className="mt-8 text-sm font-black text-blue-600 flex items-center gap-2 group-hover:translate-x-1 transition-transform">
+                카드 클릭 시 이동 <span className="text-lg">→</span>
               </div>
             </Link>
           );
