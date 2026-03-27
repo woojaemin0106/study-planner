@@ -1,9 +1,28 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import MonthCalendar from "../components/MonthCalendar";
 
 export default function MainPage() {
   const navigate = useNavigate();
+
+  const [progressData, setProgressData] = useState({ percent: 0, done: 0, total: 0 });
+
+  useEffect(() => {
+    const pad2 = (n) => String(n).padStart(2, "0");
+    const now = new Date();
+    const todayISO = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+    
+    const dailyRaw = localStorage.getItem(`study-planner:daily-board:${todayISO}`);
+    if (dailyRaw) {
+      const dData = JSON.parse(dailyRaw);
+      const allCards = dData.lists.flatMap(l => l.cards);
+      const total = allCards.length;
+      const done = allCards.filter(c => c.done).length;
+      const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+      setProgressData({ percent, done, total });
+    }
+  }, []);
+
   const quickLinks = [
     {
       title: "Days",
@@ -79,7 +98,7 @@ export default function MainPage() {
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-6 py-14 md:grid-cols-3">
           {/* Left text */}
           <div className="md:col-span-2">
-            <p className="mt-3 text-sm leading-6 text-gray-600">
+            <p className="mt-3 text-sm leading-6 text-gray-600 font-bold">
               Days에서 오늘 할 일을 정리하고, Timer로 공부 시간을 기록하고,
               Challenges에서 달성률을 확인합니다.
             </p>
@@ -110,28 +129,33 @@ export default function MainPage() {
             <div className="mt-8">
               <MonthCalendar
                 onSelectDate={(dateObj, iso) => {
-                  navigate("/Days/daily", { state: { dateISO: iso } });
+                  navigate(`/Days/daily?date=${iso}`);
                 }}
               />
             </div>
           </div>
 
-          {/* Right widgets (placeholder cards like your screenshot) */}
+          {/* Right widgets (fixed progress card) */}
           <div className="space-y-4">
-            {/* Progress card */}
-            <div className="rounded-2xl bg-slate-700 p-5 text-white shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-white/80">
-                    오늘 달성률
-                  </p>
-                  <p className="mt-1 text-2xl font-extrabold">0%</p>
+            {/* Progress card: Dark Blue BG, Blue Bar, Compact Size */}
+            <div className="rounded-2xl bg-[#334155] p-5 text-white shadow-lg">
+              <div className="flex flex-col gap-1">
+                <p className="text-[11px] font-black text-white/70 uppercase tracking-wider">
+                  오늘 달성률
+                </p>
+                <div className="flex items-baseline gap-2 mt-2">
+                  <span className="text-4xl font-black leading-none">
+                    {progressData.percent}%
+                  </span>
                 </div>
               </div>
 
-              <div className="mt-4">
-                <div className="h-2 w-full rounded-full bg-white/20">
-                  <div className="h-2 w-0 rounded-full bg-white" />
+              <div className="mt-5">
+                <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+                  <div 
+                    className="h-full bg-blue-500 rounded-full transition-all duration-700 ease-out shadow-[0_0_8px_rgba(59,130,246,0.5)]" 
+                    style={{ width: `${progressData.percent}%` }}
+                  />
                 </div>
               </div>
             </div>

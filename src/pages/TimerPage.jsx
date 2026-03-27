@@ -56,12 +56,20 @@ export default function TimerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black px-6 pt-16 pb-12 font-sans selection:bg-blue-100">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-[#f8fafc] text-black px-6 py-10 font-sans selection:bg-blue-100">
+      <div className="max-w-6xl mx-auto">
         
-        {/* 타이머 표시 화면: 상하단 모두 둥글게(rounded-[48px]) 및 상단 여백(mt-8) 추가 */}
+        {/* Header Standardization */}
+        <div className="mb-12 flex flex-col gap-2">
+          <h1 className="text-4xl font-black text-gray-900">Timer</h1>
+          <p className="text-base text-gray-400 font-bold">
+            공부 시간을 기록하고 집중력을 유지하세요.
+          </p>
+        </div>
+
+        {/* 타이머 표시 화면 */}
         {(isActive || timeLeft > 0) && (
-          <div className="text-center py-16 bg-[#f8f9fa] rounded-[48px] border border-gray-100 shadow-sm transition-all mb-12">
+          <div className="text-center py-16 bg-white rounded-[48px] border border-gray-100 shadow-sm transition-all mb-12">
             <div className="text-9xl font-extralight mb-10 tabular-nums tracking-tighter text-gray-900 leading-none">
               {formatTime(timeLeft)}
             </div>
@@ -82,55 +90,59 @@ export default function TimerPage() {
           </div>
         )}
 
-        {/* 타이머 설정 섹션 */}
-        <section className={`space-y-10 ${!(isActive || timeLeft > 0) ? 'pt-12' : ''}`}>
-          <h2 className="text-[26px] font-bold tracking-tight text-center">타이머 설정</h2>
-          
-          <div className="grid grid-cols-3 gap-6">
-            {[
-              { label: '시', max: 23, value: hours, setter: setHours },
-              { label: '분', max: 59, value: minutes, setter: setMinutes },
-              { label: '초', max: 59, value: seconds, setter: setSeconds }
-            ].map((item) => (
-              <div key={item.label} className="space-y-3 text-center">
-                <label className="text-[13px] font-bold text-gray-400">{item.label}</label>
-                <div className="relative">
-                  <select 
-                    value={item.value}
-                    onChange={(e) => item.setter(Number(e.target.value))}
-                    className="w-full bg-[#f1f3f5] border-none rounded-2xl p-5 appearance-none text-2xl font-semibold focus:ring-2 focus:ring-blue-500/20 text-center"
-                  >
-                    {[...Array(item.max + 1).keys()].map(v => (
-                      <option key={v} value={v}>{v.toString().padStart(2, '0')}</option>
-                    ))}
-                  </select>
+        {/* 타이머 설정 섹션: REVERT TO ORIGINAL STYLE (Wider) */}
+        <div className="w-full space-y-16">
+          <section className="space-y-12">
+            <h2 className="text-2xl font-black text-gray-900 border-b border-gray-100 pb-4">타이머 설정</h2>
+            
+            <div className="grid grid-cols-3 gap-12">
+              {[
+                { label: '시', max: 23, value: hours, setter: setHours },
+                { label: '분', max: 59, value: minutes, setter: setMinutes },
+                { label: '초', max: 59, value: seconds, setter: setSeconds }
+              ].map((item) => (
+                <div key={item.label} className="space-y-4 text-center">
+                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest">{item.label}</label>
+                  <div className="relative">
+                    <select 
+                      value={item.value}
+                      onChange={(e) => item.setter(Number(e.target.value))}
+                      className="w-full bg-[#f1f3f5] border-none rounded-[20px] p-6 appearance-none text-4xl font-extrabold focus:ring-4 focus:ring-blue-100 transition-all text-center text-gray-900"
+                    >
+                      {[...Array(item.max + 1).keys()].map(v => (
+                        <option key={v} value={v}>{v.toString().padStart(2, '0')}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </section>
 
           {/* 프리셋: 사용자가 요청한 기존 스타일(가로 정렬 + 아이콘 옆 텍스트) 유지 */}
-          <div className="grid grid-cols-4 gap-y-8 pt-4">
+          <div className="grid grid-cols-4 gap-y-12 py-8">
             {presets.map((preset, index) => (
               <button 
                 key={index} 
                 onClick={() => handlePreset(preset.value)}
-                className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors group justify-self-center"
+                className="flex items-center gap-3 text-gray-400 hover:text-blue-600 transition-all group justify-self-center hover:scale-110"
               >
-                <Bell size={18} className="group-hover:animate-bounce text-black" />
-                <span className="text-[15px] font-medium">{preset.label}</span>
+                <div className="p-2 bg-white rounded-full shadow-sm ring-1 ring-gray-100 group-hover:ring-blue-100">
+                  <Bell size={20} className="group-hover:animate-bounce text-black" />
+                </div>
+                <span className="text-[17px] font-bold">{preset.label}</span>
               </button>
             ))}
           </div>
-        </section>
 
-        <div className="pt-10">
-          <button 
-            onClick={handleStart}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 rounded-2xl transition-all text-xl shadow-lg"
-          >
-            START
-          </button>
+          <div className="pb-20">
+            <button 
+              onClick={handleStart}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-7 rounded-[28px] transition-all text-2xl shadow-[0_20px_40px_rgba(37,99,235,0.3)] active:scale-[0.98]"
+            >
+              START
+            </button>
+          </div>
         </div>
       </div>
     </div>
