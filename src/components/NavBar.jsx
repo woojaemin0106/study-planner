@@ -21,16 +21,12 @@ function NavBar() {
                 {/* 2. 중앙 메뉴 */}
                 <nav className="flex-[2] flex justify-center">
                     <ul className="flex items-center gap-16 text-[17px] font-medium tracking-wide">
-                        <li>
-                            <Link to="/" className="hover:text-blue-600 transition-colors uppercase">Home</Link>
-                        </li>
-
                         <li 
                             className="relative"
                             onMouseEnter={() => setIsDaysOpen(true)}
                             onMouseLeave={() => setIsDaysOpen(false)}
                         >
-                            <Link to="/Days" className="hover:text-blue-600 transition-colors uppercase flex items-center gap-1">
+                            <Link to="/Days" className="hover:text-blue-600 transition-colors flex items-center gap-1">
                                 Days 
                             </Link>
                             
@@ -45,8 +41,8 @@ function NavBar() {
                             )}
                         </li>
 
-                        <li><Link to="/Timer" className="hover:text-blue-600 transition-colors uppercase">Timer</Link></li>
-                        <li><Link to="/Challenges" className="hover:text-blue-600 transition-colors uppercase">Challenges</Link></li>
+                        <li><Link to="/Timer" className="hover:text-blue-600 transition-colors">Timer</Link></li>
+                        <li><Link to="/Challenges" className="hover:text-blue-600 transition-colors">Challenges</Link></li>
                     </ul>
                 </nav>
 
