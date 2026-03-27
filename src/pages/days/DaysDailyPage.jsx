@@ -81,14 +81,44 @@ export default function DaysDailyPage() {
 
   const { total, done, progress } = useMemo(() => {
     const all = board.lists.flatMap((l) => l.cards);
-    // User requested fixed logic like 3/10 = 30%. I'll use 10 as base if total is less, or actual total.
-    // Actually, following the user's "3/10 완료" example, let's assume a base of 10 for display if appropriate,
-    // or just use actual counts but ensure the math is right.
     const d = all.filter((c) => c.done).length;
-    const t = Math.max(all.length, 10); // Use 10 as base as per user's example
+    const t = Math.max(all.length, 10); 
     const p = Math.round((d / t) * 100);
     return { total: t, done: d, progress: p };
   }, [board]);
+
+  // --- Weekly Sync ---
+  const [weeklyData, setWeeklyData] = useState({ totalTasks: 0, progress: 0 });
+
+  useEffect(() => {
+    const getWeekStartISO = (dateStr) => {
+      if (!dateStr) return "";
+      const [y, m, dd] = dateStr.split("-").map(Number);
+      const d = new Date(y, m - 1, dd);
+      const day = d.getDay(); 
+      const diffToMon = (day + 6) % 7;
+      d.setDate(d.getDate() - diffToMon);
+      return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+    };
+    const weekStart = getWeekStartISO(dateISO);
+    const raw = localStorage.getItem(`study-planner:weekly:${weekStart}`);
+    
+    if (raw) {
+      const data = JSON.parse(raw);
+      let total = 0;
+      let completed = 0;
+      Object.values(data.days || {}).forEach(day => {
+        if (day.tasks) {
+          total += day.tasks.length;
+          completed += day.tasks.filter(t => t.done).length;
+        }
+      });
+      setWeeklyData({
+        totalTasks: total,
+        progress: total > 0 ? Math.round((completed / total) * 100) : 0
+      });
+    }
+  }, [dateISO]);
 
   return (
     <div className="min-h-screen bg-gray-50/50 pb-20">
@@ -98,12 +128,15 @@ export default function DaysDailyPage() {
           {/* LEFT: To-Do List */}
           <div className="flex-1 flex flex-col">
             <div className="mb-8 flex flex-col gap-4">
-              <Link to="/Days" className="text-blue-600 text-sm font-bold flex items-center gap-1">
+              <Link to="/Days" className="text-blue-600 text-sm font-bold flex items-center gap-1 mb-4">
                 <span className="text-lg">←</span> Days로 돌아가기
               </Link>
-              <div className="flex items-baseline gap-4">
+              <div>
                 <h1 className="text-[40px] font-black text-gray-900 leading-none">일간</h1>
-                <h2 className="text-[28px] font-bold text-gray-900 ml-12 leading-none">To-Do-List</h2>
+                <div className="flex items-baseline gap-4 mt-2">
+                  <h2 className="text-[28px] font-bold text-gray-900 leading-none">To-Do-List</h2>
+                  <p className="text-gray-400 font-bold text-xl">{dateISO}</p>
+                </div>
               </div>
             </div>
 
@@ -139,16 +172,16 @@ export default function DaysDailyPage() {
               </div>
               <div className="flex gap-4">
                 <div className="flex-1 bg-gray-50 rounded-2xl p-5">
-                  <span className="text-gray-400 text-xs font-bold">주간 목표</span>
-                  <p className="text-2xl font-black text-gray-900 mt-1">5</p>
+                  <span className="text-gray-400 text-[10px] font-black uppercase">주간 목표</span>
+                  <p className="text-3xl font-black text-gray-900 mt-1">{weeklyData.totalTasks}</p>
                 </div>
                 <div className="flex-1 bg-gray-50 rounded-2xl p-5">
-                  <span className="text-gray-400 text-xs font-bold">진행률</span>
-                  <p className="text-2xl font-black text-gray-900 mt-1">0%</p>
+                  <span className="text-gray-400 text-[10px] font-black uppercase">진행률</span>
+                  <p className="text-3xl font-black text-gray-900 mt-1">{weeklyData.progress}%</p>
                 </div>
               </div>
-              <Link to="/Days/weekly" className="text-blue-600 text-sm font-bold cursor-pointer hover:underline">
-                카드 클릭시 이동 →
+              <Link to="/Days/weekly" className="text-blue-600 font-black text-sm flex items-center gap-2 hover:translate-x-1 transition-transform">
+                카드 클릭 시 이동 <span className="text-lg">→</span>
               </Link>
             </div>
 
