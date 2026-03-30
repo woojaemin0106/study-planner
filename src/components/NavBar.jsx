@@ -1,13 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import { navbarClasses } from './NavBarStyles'; 
+import { supabase } from '../lib/supabase';
 
 function NavBar() {
     const [isDaysOpen, setIsDaysOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [user, setUser] = useState(null);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+    useEffect(() => {
+        // 초기 세션 확인
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null);
+        });
+
+        // 인증 상태 변경 감지
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+    
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        setIsProfileOpen(false);
+        setIsMenuOpen(false);
+    };
 
     return (
         <header className={`${navbarClasses.header} sticky top-0 bg-white z-[100] border-b border-gray-100 mb-0 shadow-none`}>
@@ -48,10 +71,42 @@ function NavBar() {
                     </ul>
                 </nav>
 
-                {/* 3. 로그인/회원가입 (Desktop) */}
+                {/* 3. 로그인/회원가입 or 프로필 (Desktop) */}
                 <div className="hidden md:flex flex-1 justify-end gap-8 items-center">
-                    <Link to="/login" className="text-[14px] text-gray-500 hover:text-black transition-colors">로그인</Link>
-                    <Link to="/signup" className="text-[13px] bg-gray-900 text-white px-5 py-2 rounded-full hover:bg-black transition-all">회원가입</Link>
+                    {user ? (
+                        <div className="relative">
+                            <button 
+                                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:ring-2 hover:ring-gray-200 transition-all focus:outline-none overflow-hidden"
+                            >
+                                {user.user_metadata?.avatar_url ? (
+                                    <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                    <User size={24} className="text-gray-400" />
+                                )}
+                            </button>
+                            
+                            {isProfileOpen && (
+                                <div className="absolute right-0 mt-3 w-40 bg-white border border-gray-100 shadow-xl rounded-xl py-2 overflow-hidden z-[110]">
+                                    <div className="px-4 py-2 border-b border-gray-50 mb-1">
+                                        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Account</p>
+                                        <p className="text-xs text-gray-600 truncate">{user.email}</p>
+                                    </div>
+                                    <button 
+                                        onClick={handleLogout}
+                                        className="w-full text-left px-4 py-2.5 hover:bg-red-50 text-red-600 text-sm font-medium transition-colors"
+                                    >
+                                        로그아웃
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <>
+                            <Link to="/login" className="text-[14px] text-gray-500 hover:text-black transition-colors">로그인</Link>
+                            <Link to="/signup" className="text-[13px] bg-gray-900 text-white px-5 py-2 rounded-full hover:bg-black transition-all">회원가입</Link>
+                        </>
+                    )}
                 </div>
 
                 {/* 4. Mobile Menu Button */}
@@ -79,8 +134,34 @@ function NavBar() {
                         </div>
                         <div className="h-[1px] bg-gray-50" />
                         <div className="flex flex-col gap-4">
-                            <Link to="/login" onClick={toggleMenu} className="text-center py-3 rounded-xl border border-gray-200 font-bold">로그인</Link>
-                            <Link to="/signup" onClick={toggleMenu} className="text-center py-3 rounded-xl bg-gray-900 text-white font-bold">회원가입</Link>
+                            {user ? (
+                                <>
+                                    <div className="flex items-center gap-3 px-1 mb-2">
+                                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                                            {user.user_metadata?.avatar_url ? (
+                                                <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <User size={20} className="text-gray-400" />
+                                            )}
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <p className="text-sm font-bold text-gray-900 truncate max-w-[200px]">{user.email}</p>
+                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Logged In</p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={handleLogout} 
+                                        className="text-center py-3 rounded-xl bg-red-50 text-red-600 font-bold transition-colors"
+                                    >
+                                        로그아웃
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <Link to="/login" onClick={toggleMenu} className="text-center py-3 rounded-xl border border-gray-200 font-bold">로그인</Link>
+                                    <Link to="/signup" onClick={toggleMenu} className="text-center py-3 rounded-xl bg-gray-900 text-white font-bold">회원가입</Link>
+                                </>
+                            )}
                         </div>
                     </nav>
                 </div>
