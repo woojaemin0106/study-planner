@@ -51,8 +51,8 @@ export default function ChallengesPage() {
   return (
     <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col gap-12">
       <header className="flex flex-col gap-2">
-        <h1 className="text-4xl font-black text-gray-900">Challenges</h1>
-        <p className="text-base text-gray-400 font-bold">
+        <h1 className="text-3xl md:text-4xl font-black text-gray-900">Challenges</h1>
+        <p className="text-sm md:text-base text-gray-400 font-bold">
           달성률을 확인하고 목표를 향해 도전하세요.
         </p>
       </header>

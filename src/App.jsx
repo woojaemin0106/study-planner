@@ -7,12 +7,8 @@ import DaysLayout from "./pages/days/DaysLayout.jsx";
 import DaysDailyPage from "./pages/days/DaysDailyPage.jsx";
 import DaysWeeklyPage from "./pages/days/DaysWeeklyPage.jsx";
 import DaysMonthlyPage from "./pages/days/DaysMonthlyPage.jsx";
-function LoginPage() {
-  return <div className="p-6">Login</div>;
-}
-function SignupPage() {
-  return <div className="p-6">Signup</div>;
-}
+import LoginPage from "./pages/LoginPage.jsx";
+import SignupPage from "./pages/SignupPage.jsx";
 
 export default function App() {
   return (
@@ -33,8 +29,8 @@ export default function App() {
           <Route path="/Challenges" element={<ChallengesPage />} />
 
           {/* Auth */}
-          <Route path="/Login" element={<LoginPage />} />
-          <Route path="/Signup" element={<SignupPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

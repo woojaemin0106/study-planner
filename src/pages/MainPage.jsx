@@ -54,23 +54,22 @@ export default function MainPage() {
     <div className="w-full">
       {/* Hero */}
       <section className="w-full relative bg-gray-100">
-        <div className="mx-auto max-w-6xl px-6 py-20">
+        <div className="mx-auto max-w-6xl px-6 py-12 md:py-20">
           <div className="flex flex-col items-center justify-center text-center">
-            <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">
+            <h1 className="text-2xl font-extrabold tracking-tight md:text-4xl">
               Study planner
             </h1>
-            <p className="mt-3 max-w-xl text-sm text-gray-700 md:text-base">
+            <p className="mt-3 max-w-xl text-xs text-gray-700 md:text-base">
               오늘의 계획, 공부 시간, 달성률을 한 곳에서 관리하는 스터디 플래너.
             </p>
 
             {/* Placeholder logo/icon area */}
-            <div className="mt-10 flex h-28 w-28 items-center justify-center rounded-2xl bg-white/70 shadow-sm">
-              <span className="text-4xl font-black text-gray-400">
-                {" "}
+            <div className="mt-8 flex h-20 w-20 md:h-28 md:w-28 items-center justify-center rounded-2xl bg-white/70 shadow-sm">
+              <span className="text-3xl md:text-4xl font-black text-gray-400">
                 <img
                   src="/logo.png"
                   alt="앱 로고"
-                  className="h-8 w-auto" // h-8 (높이 2rem, 32px), w-auto (가로 비율 유지)
+                  className="h-6 md:h-8 w-auto"
                 />
               </span>
             </div>
@@ -95,16 +94,16 @@ export default function MainPage() {
 
       {/* Intro + Right widgets */}
       <section className="w-full bg-white">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-6 py-14 md:grid-cols-3">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-6 py-10 md:py-14 md:grid-cols-3">
           {/* Left text */}
           <div className="md:col-span-2">
-            <p className="mt-3 text-sm leading-6 text-gray-600 font-bold">
+            <p className="mt-3 text-sm leading-6 text-gray-600 font-bold text-center md:text-left">
               Days에서 오늘 할 일을 정리하고, Timer로 공부 시간을 기록하고,
               Challenges에서 달성률을 확인합니다.
             </p>
 
             {/* Quick links */}
-            <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
               {quickLinks.map((item) => (
                 <Link
                   key={item.title}

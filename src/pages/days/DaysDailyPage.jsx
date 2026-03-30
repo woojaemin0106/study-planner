@@ -121,21 +121,21 @@ export default function DaysDailyPage() {
   }, [dateISO]);
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-20">
-      <div className="max-w-[1400px] mx-auto px-12 py-12">
+    <div className="min-h-screen bg-gray-50/50 pb-10 md:pb-20">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-8 md:px-12 py-8 md:py-12">
         <div className="flex flex-col lg:flex-row gap-12">
           
           {/* LEFT: To-Do List */}
           <div className="flex-1 flex flex-col">
-            <div className="mb-8 flex flex-col gap-4">
-              <Link to="/Days" className="text-blue-600 text-sm font-bold flex items-center gap-1 mb-4">
+            <div className="mb-6 md:mb-8 flex flex-col gap-4 text-center md:text-left">
+              <Link to="/Days" className="text-blue-600 text-sm font-bold flex items-center justify-center md:justify-start gap-1 mb-2 md:mb-4">
                 <span className="text-lg">←</span> Days로 돌아가기
               </Link>
               <div>
-                <h1 className="text-[40px] font-black text-gray-900 leading-none">일간</h1>
-                <div className="flex items-baseline gap-4 mt-2">
-                  <h2 className="text-[28px] font-bold text-gray-900 leading-none">To-Do-List</h2>
-                  <p className="text-gray-400 font-bold text-xl">{dateISO}</p>
+                <h1 className="text-3xl md:text-[40px] font-black text-gray-900 leading-none">일간</h1>
+                <div className="flex flex-col md:flex-row items-center md:items-baseline gap-2 md:gap-4 mt-2">
+                  <h2 className="text-2xl md:text-[28px] font-bold text-gray-900 leading-none">To-Do-List</h2>
+                  <p className="text-gray-400 font-bold text-lg md:text-xl">{dateISO}</p>
                 </div>
               </div>
             </div>
@@ -195,7 +195,7 @@ export default function DaysDailyPage() {
             {/* Recommended Routines */}
             <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col gap-6">
               <h3 className="text-xl font-black text-gray-900">추천 루틴</h3>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {DEFAULT_ROUTINES.map((routine, i) => (
                   <RoutineCard key={i} {...routine} />
                 ))}
