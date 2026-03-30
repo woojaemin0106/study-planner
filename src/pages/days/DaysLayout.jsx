@@ -114,9 +114,9 @@ export default function DaysLayout() {
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-10">
       {/* Header */}
-      <div className="flex flex-col gap-2">
-        <h1 className="text-4xl font-black text-gray-900">Days</h1>
-        <p className="text-base text-gray-400 font-bold">
+      <div className="flex flex-col gap-2 transition-all">
+        <h1 className="text-3xl md:text-4xl font-black text-gray-900">Days</h1>
+        <p className="text-sm md:text-base text-gray-400 font-bold">
           일간/주간/월간을 한눈에 보고, 클릭해서 해당 페이지로 이동하세요.
         </p>
       </div>
