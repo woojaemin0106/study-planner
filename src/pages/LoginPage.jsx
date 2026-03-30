@@ -34,22 +34,30 @@ const LoginPage = () => {
         <h1 className="auth-title">로그인</h1>
         <form className="auth-form" onSubmit={handleLogin}>
           <div className="auth-input-group">
+            <label htmlFor="email" className="auth-label">이메일</label>
             <input
+              id="email"
+              name="email"
               type="email"
               className="auth-input"
               placeholder="이메일 주소를 입력해 주세요"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
               required
             />
           </div>
           <div className="auth-input-group">
+            <label htmlFor="password" className="auth-label">비밀번호</label>
             <input
+              id="password"
+              name="password"
               type="password"
               className="auth-input"
               placeholder="비밀번호를 입력해 주세요"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
               required
             />
           </div>
